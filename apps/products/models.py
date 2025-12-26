@@ -1,8 +1,12 @@
 from django.db import models
 from django.utils import timezone
 from django.core.validators import MinValueValidator
-# from cloudinary_storage.storage import MediaCloudinaryStorage
-# from core.utils import get_upload_path
+from cloudinary_storage.storage import MediaCloudinaryStorage
+from core.utils import get_upload_path
+
+
+def product_image_upload_path(instance, filename):
+    return get_upload_path(instance, filename, "product_image/")
 
 
 class Category(models.Model):
@@ -35,8 +39,8 @@ class Product(models.Model):
     )
     stock = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     image = models.ImageField(
-        # upload_to=menu_image_upload_path,
-        # storage=MediaCloudinaryStorage(),
+        upload_to=product_image_upload_path,
+        storage=MediaCloudinaryStorage(),
         null=True,
         blank=True,
     )

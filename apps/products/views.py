@@ -13,7 +13,6 @@ class CategoryViewSet(viewsets.ModelViewSet):
     serializer_class = CategorySerializer
     pagination_class = PageNumberPagination
     permission_classes = [permissions.AllowAny]
-    authentication_classes = []
     search_fields = ["name"]
     filterset_fields = ["name"]
     ordering_fields = ["created_at"]
@@ -49,7 +48,6 @@ class ProductViewSet(viewsets.ModelViewSet):
     serializer_class = ProductSerializer
     pagination_class = PageNumberPagination
     permission_classes = [permissions.AllowAny]
-    authentication_classes = []
     search_fields = ["name", "description"]
     filterset_fields = ["category", "price"]
     ordering_fields = ["price", "created_at"]
