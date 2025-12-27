@@ -30,10 +30,10 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "w9j8+o2elhkqd_+!^q7d4@#tczlg3q^-ed8(3
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ["backendrcstore-production.up.railway.app"]
 
 # HTTPS Settings
-SECURE_SSL_REDIRECT = True
+SECURE_SSL_REDIRECT = False
 SECURE_HSTS_SECONDS = 31526000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
