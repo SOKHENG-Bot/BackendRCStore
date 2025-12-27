@@ -13,7 +13,6 @@ from .serializers import (
 
 class RegisterView(APIView):
     permission_classes = [permissions.AllowAny]
-    authentication_classes = []
 
     @swagger_auto_schema(request_body=RegisterSerializer)
     def post(self, request):
@@ -32,7 +31,6 @@ class RegisterView(APIView):
 
 class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
-    authentication_classes = []
 
     @swagger_auto_schema(request_body=LoginSerializer)
     def post(self, request):
