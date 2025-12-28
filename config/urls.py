@@ -36,6 +36,7 @@ urlpatterns = [
     path("auth/", include("apps.auths.urls")),
     path("", include("apps.products.urls")),
     path("orders/", include("apps.orders.urls")),
+    path("cart/", include("apps.cart.urls")),
     path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
     path(
         "swagger/",

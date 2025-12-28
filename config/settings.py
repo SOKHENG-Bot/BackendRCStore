@@ -25,7 +25,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get("SECRET_KEY", "w9j8+o2elhkqd_+!^q7d4@#tczlg3q^-ed8(3sb(l3k^r)bx=b")
+SECRET_KEY = os.environ.get(
+    "SECRET_KEY", "w9j8+o2elhkqd_+!^q7d4@#tczlg3q^-ed8(3sb(l3k^r)bx=b"
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
@@ -61,6 +63,7 @@ INSTALLED_APPS = [
     "apps.auths",
     "apps.products",
     "apps.orders",
+    "apps.cart",
     # cloudinary
     "cloudinary",
     "cloudinary_storage",
