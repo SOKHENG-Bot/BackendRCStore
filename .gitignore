@@ -4,6 +4,7 @@ __pycache__/
 *.pyo
 *.pyd
 .pytest_cache
+.ruff.toml
 
 # Django
 db.sqlite3

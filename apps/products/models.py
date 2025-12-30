@@ -1,8 +1,8 @@
-from django.db import models
-from django.utils import timezone
-from django.core.validators import MinValueValidator
 from cloudinary_storage.storage import MediaCloudinaryStorage
 from core.utils import get_upload_path
+from django.core.validators import MinValueValidator
+from django.db import models
+from django.utils import timezone
 
 
 def product_image_upload_path(instance, filename):

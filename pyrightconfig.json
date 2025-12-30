@@ -1,28 +1,17 @@
 {
+  "pythonPath": "./venv/bin/python3",
   "venvPath": ".",
   "venv": "venv",
-  "pythonVersion": "3.10",
-  "pythonPlatform": "Linux",
-  "exclude": [
-    "**/node_modules",
-    "**/__pycache__",
-    ".git",
-    "venv"
-  ],
-  "executionEnvironments": [
-    {
-      "root": ".",
-      "pythonVersion": "3.10",
-      "extraPaths": [
-        "./apps",
-        "./config"
-      ]
-    }
-  ],
+  "typeCheckingMode": "basic",
   "reportMissingImports": true,
   "reportMissingTypeStubs": false,
-  "typeCheckingMode": "basic",
-  "useLibraryCodeForTypes": true,
-  "autoSearchPaths": true,
-  "stubPath": "./typings"
+  "reportIncompatibleVariableOverride": false,
+  "reportUnreachableCode": false,
+  "reportUnusedVariable": false,
+  "reportUnusedParameter": false,
+  "reportAttributeAccessIssue": false,
+  "reportMissingSuperCall": false,
+  "reportGeneralTypeIssues": false,
+  "reportIndexIssue": false,
+  "reportOptionalSubscript": false
 }

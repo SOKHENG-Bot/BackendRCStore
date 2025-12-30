@@ -1,8 +1,9 @@
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import permissions, viewsets
+from rest_framework.pagination import PageNumberPagination
+
 from .models import Order
 from .serializers import OrderSerializer
-from rest_framework import viewsets, permissions
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.pagination import PageNumberPagination
 
 
 class OrderViewSet(viewsets.ModelViewSet):
