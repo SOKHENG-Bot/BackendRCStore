@@ -1,19 +1,33 @@
 from rest_framework import serializers
 
+from apps.products.serializers import ProductSerializer
+
 from .models import Cart, CartProduct
 
 
 class CartProductSerializer(serializers.ModelSerializer):
+    product = ProductSerializer(read_only=True)
+
     class Meta:
         model = CartProduct
-        fields = ["id", "cart", "product", "quantity"]
+        fields = ["product", "quantity", "total_price"]
         read_only_fields = ["id"]
 
 
 class CartSerializer(serializers.ModelSerializer):
-    products = CartProductSerializer
+    product_list = CartProductSerializer(read_only=True, many=True, source="products")
+    created_by = serializers.StringRelatedField(read_only=True)
 
     class Meta:
         model = Cart
-        fields = ["id", "products", "created_by", "created_at"]
+        fields = ["id", "product_list", "total_price", "created_by"]
         read_only_fields = ["id", "created_by"]
+
+
+class AddProductSerializer(serializers.Serializer):
+    product_id = serializers.IntegerField()
+    quantity = serializers.IntegerField(default=1, min_value=1)
+
+
+class UpdateProductSerializer(serializers.Serializer):
+    quantity = serializers.IntegerField(min_value=1)
