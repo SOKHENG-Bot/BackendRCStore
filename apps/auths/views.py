@@ -1,48 +1,49 @@
-from drf_yasg.utils import swagger_auto_schema
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .serializers import (LoginSerializer, RegisterSerializer, UserSerializer,
+from .serializers import (LoginSerializer, RegisterSerializer,
                           get_tokens_for_user)
 
 
 class RegisterView(APIView):
     permission_classes = [permissions.AllowAny]
+    serializer_class = RegisterSerializer
 
-    @swagger_auto_schema(request_body=RegisterSerializer)
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        except Exception as e:
             return Response(
-                {
-                    "message": "User register successfully",
-                    "user": UserSerializer(user).data,
-                },
-                status=status.HTTP_201_CREATED,
+                {"error": "Registration failed", "detail": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
             )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
+    serializer_class = LoginSerializer
 
-    @swagger_auto_schema(request_body=LoginSerializer)
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
-        if serializer.is_valid():
+        serializer.is_valid(raise_exception=True)
+
+        try:
             user = serializer.validated_data["user"]
             tokens = get_tokens_for_user(user)
             return Response(
-                {
-                    "message": "User login successfully",
-                    "user": UserSerializer(user).data,
-                    "token": tokens,
-                }
+                {"user": serializer.data, "token": tokens}, status=status.HTTP_200_OK
             )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response(
+                {"error": "Login Failed", "detail": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
 class LogoutView(APIView):
@@ -50,20 +51,19 @@ class LogoutView(APIView):
 
     def post(self, request):
         refresh_token = request.data.get("refresh")
+
         if refresh_token:
             try:
                 token = RefreshToken(refresh_token)
                 token.blacklist()
+                return Response({"message": "Logged out"})
+            except Exception as e:
                 return Response(
-                    {
-                        "message": "Logged out",
-                    },
-                    status=status.HTTP_205_RESET_CONTENT,
+                    {"error": "Invalid token", "detail": str(e)},
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
-            except Exception:
-                return Response(
-                    {"message": "Invald token"}, status=status.HTTP_400_BAD_REQUEST
-                )
-        return Response(
-            {"message": "Refresh token is required"}, status=status.HTTP_400_BAD_REQUEST
-        )
+        else:
+            return Response(
+                {"error": "Refresh toke is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )

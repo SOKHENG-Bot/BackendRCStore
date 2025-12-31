@@ -15,9 +15,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
-        required=True,
-        write_only=True,
-        validators=[validate_password],
+        required=True, write_only=True, validators=[validate_password]
     )
     confirm_password = serializers.CharField(required=True, write_only=True)
 
@@ -54,6 +52,7 @@ class LoginSerializer(serializers.Serializer):
     def validate(self, data):
         email = data.get("email")
         password = data.get("password")
+
         if not email or not password:
             raise serializers.ValidationError("email and password are required")
 
