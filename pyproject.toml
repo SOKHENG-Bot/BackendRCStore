@@ -1,6 +1,6 @@
 [tool.ruff]
 # Extend the default line length
-line-length = 120
+line-length = 300
 
 [tool.ruff.lint]
 # Ignore E501 (line too long)
