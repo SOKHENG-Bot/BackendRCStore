@@ -10,7 +10,6 @@ class OrderProductSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    # Nested product object data from Order Product
     product = OrderProductSerializer(many=True, read_only=True)
     ordered_by = serializers.StringRelatedField(read_only=True)
 
