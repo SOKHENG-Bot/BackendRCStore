@@ -1,5 +1,4 @@
 from django_filters.rest_framework import DjangoFilterBackend
-from drf_yasg.utils import swagger_auto_schema
 from rest_framework import filters, permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
@@ -23,12 +22,8 @@ class CategoryViewSet(viewsets.ModelViewSet):
         filters.OrderingFilter,
     ]
 
-    @swagger_auto_schema(request_body=CategorySerializer)
-    def create(self, request, *args, **kwargs):
-        return super().create(request, *args, **kwargs)
-
     @action(detail=True, methods=["get"], url_path="products")
-    def get_products(self, request, pk=None):
+    def get_product_filter(self, request, pk=None):
         try:
             category = self.get_object()
             products = Product.objects.filter(category=category)
@@ -57,7 +52,3 @@ class ProductViewSet(viewsets.ModelViewSet):
         filters.SearchFilter,
         filters.OrderingFilter,
     ]
-
-    @swagger_auto_schema(request_body=ProductSerializer)
-    def create(self, request, *args, **kwargs):
-        return super().create(request, *args, **kwargs)
