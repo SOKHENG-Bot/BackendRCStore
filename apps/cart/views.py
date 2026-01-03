@@ -1,10 +1,9 @@
-from django.http import request
 from django.shortcuts import get_object_or_404
+from django.utils import translation
 from rest_framework import permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.views import Response, status
 
-from apps.cart import serializers
 from apps.products.models import Product
 
 from .models import Cart, CartProduct
@@ -24,27 +23,29 @@ class CartViewSet(viewsets.ModelViewSet):
     def add_product(self, request):
         serializer = AddProductSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        cart, _ = Cart.objects.get_or_create(created_by=request.user)
 
-        product_id = request.data.get("product_id")
-        if not product_id:
-            return Response(
-                {"error": "Product with query ID not found."},
-                status=status.HTTP_400_BAD_REQUEST,
+        with translation.atomic():
+            cart, _ = Cart.objects.get_or_create(created_by=request.user)
+
+            product_id = request.data.get("product_id")
+            if not product_id:
+                return Response(
+                    {"error": "Product ID is required."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            quantity = serializer.validated_data["quantity"]
+            product = get_object_or_404(Product, id=product_id)
+
+            cart_product, created = CartProduct.objects.get_or_create(
+                cart=cart,
+                product=product,
+                defaults={"quantity": quantity},
             )
 
-        quantity = serializer.validated_data["quantity"]
-        product = get_object_or_404(Product, id=product_id)
-
-        cart_product, created = CartProduct.objects.get_or_create(
-            cart=cart,
-            product=product,
-            defaults={"quantity": quantity},
-        )
-
-        if not created:
-            cart_product.quantity += quantity
-            cart_product.cart.save()
+            if not created:
+                cart_product.quantity += quantity
+                cart_product.save()
 
         return_serializer = CartSerializer(cart)
         return Response(return_serializer.data, status=status.HTTP_200_OK)
@@ -99,7 +100,7 @@ class CartViewSet(viewsets.ModelViewSet):
             cart_product.delete()
             return Response(
                 {"detail": "Product have remove from cart."},
-                status=status.HTTP_200_OK,
+                status=status.HTTP_204_NO_CONTENT,
             )
 
     # Function to clear all product from cart
@@ -113,7 +114,10 @@ class CartViewSet(viewsets.ModelViewSet):
 
         elif request.method == "DELETE":
             CartProduct.objects.filter(cart=cart).delete()
-            return Response({"detail": "Cart have clean successful."})
+            return Response(
+                {"detail": "Cart have clean successful."},
+                status=status.HTTP_204_NO_CONTENT,
+            )
 
     # Function to remove cart
     @action(detail=False, methods=["get", "delete"])
@@ -126,4 +130,7 @@ class CartViewSet(viewsets.ModelViewSet):
 
         elif request.method == "DELETE":
             cart.delete()
-            return Response({"detail": "Cart have delete successful."})
+            return Response(
+                {"detail": "Cart have delete successful."},
+                status=status.HTTP_204_NO_CONTENT,
+            )
