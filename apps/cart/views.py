@@ -1,8 +1,10 @@
+from django.http import request
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions, viewsets
 from rest_framework.decorators import action
-from rest_framework.views import Response
+from rest_framework.views import Response, status
 
+from apps.cart import serializers
 from apps.products.models import Product
 
 from .models import Cart, CartProduct
@@ -10,93 +12,118 @@ from .serializers import (AddProductSerializer, CartProductSerializer,
                           CartSerializer, UpdateProductSerializer)
 
 
-class CartViewSet(viewsets.ViewSet):
+class CartViewSet(viewsets.ModelViewSet):
     queryset = Cart.objects.all()
     serializer_class = CartSerializer
     permission_classes = [permissions.AllowAny]
 
-    def list(self, request):
-        cart = Cart.objects.filter(created_by=request.user)
-        serializer = CartSerializer(cart, many=True)
-        return Response(serializer.data)
+    def get_queryset(self):
+        return Cart.objects.filter(created_by=self.request.user)
 
-    @action(
-        detail=False,
-        methods=["get", "post"],
-        url_path="add",
-        serializer_class=AddProductSerializer,
-    )
+    @action(detail=False, methods=["post"], serializer_class=AddProductSerializer)
     def add_product(self, request):
-        cart = get_object_or_404(Cart, created_by=request.user)
+        serializer = AddProductSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        cart, _ = Cart.objects.get_or_create(created_by=request.user)
 
-        if request.method == "GET":
-            serializer = CartSerializer(cart)
-            return Response(serializer.data)
-        else:
-            serializer = AddProductSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-
-            product_id = serializer.validated_data["product_id"]
-            quantity = serializer.validated_data["quantity"]
-            product = get_object_or_404(Product, id=product_id)
-            cart_product, product_created = CartProduct.objects.get_or_create(
-                cart=cart, product=product, defaults={"quantity": quantity}
+        product_id = request.data.get("product_id")
+        if not product_id:
+            return Response(
+                {"error": "Product with query ID not found."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
-            if not product_created:
-                cart_product.quantity += int(quantity)
-                cart_product.save()
+        quantity = serializer.validated_data["quantity"]
+        product = get_object_or_404(Product, id=product_id)
 
-            cart_serializer = CartSerializer(cart)
-            return Response(cart_serializer.data)
+        cart_product, created = CartProduct.objects.get_or_create(
+            cart=cart,
+            product=product,
+            defaults={"quantity": quantity},
+        )
+
+        if not created:
+            cart_product.quantity += quantity
+            cart_product.cart.save()
+
+        return_serializer = CartSerializer(cart)
+        return Response(return_serializer.data, status=status.HTTP_200_OK)
 
     @action(
-        detail=True,
-        methods=["get", "put"],
-        url_path="update",
-        serializer_class=UpdateProductSerializer,
+        detail=False, methods=["get", "put"], serializer_class=UpdateProductSerializer
     )
-    def update_product(self, request, pk=None):
-        cart = get_object_or_404(Cart, id=pk, created_by=request.user)
+    def update_product(self, request):
+        cart = get_object_or_404(Cart, created_by=request.user)
+
         product_id = request.query_params.get("product_id")
+        if not product_id:
+            return Response(
+                {"error": "Product ID is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         cart_product = get_object_or_404(CartProduct, product_id=product_id, cart=cart)
 
         if request.method == "GET":
             serializer = CartProductSerializer(cart_product)
             return Response(serializer.data)
-        else:
+
+        elif request.method == "PUT":
             serializer = UpdateProductSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
-            quantity = serializer.validated_data["quantity"]
-            cart_product.quantity = quantity
+
+            cart_product.quantity = serializer.validated_data["quantity"]
             cart_product.save()
-            cart_serializer = CartSerializer(cart)
-            return Response(cart_serializer.data)
 
-    @action(detail=True, methods=["get", "delete"], url_path="remove")
-    def remove_product(self, request, pk=None):
-        cart = get_object_or_404(Cart, id=pk, created_by=request.user)
-        cart_prodcut = get_object_or_404(CartProduct, id=pk, cart=cart)
+            cart_serializer = CartProductSerializer(cart_product)
+            return Response(cart_serializer.data, status=status.HTTP_200_OK)
 
-        if request.method == "GET":
-            serializer = CartProductSerializer(cart_prodcut)
-            return Response(serializer.data)
-        else:
-            product_id = request.query_params.get("product_id")
-            cart_prodcut = get_object_or_404(
-                CartProduct, cart=cart, product_id=product_id
+    @action(detail=False, methods=["get", "delete"])
+    def remove_product(self, request):
+        cart = get_object_or_404(Cart, created_by=request.user)
+
+        product_id = request.query_params.get("product_id")
+        if not product_id:
+            return Response(
+                {"error": "Product ID is required."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
-            cart_prodcut = get_object_or_404(CartProduct, id=pk, cart=cart)
-            cart_prodcut.delete()
-            return Response({"detail": "Product removed from cart."})
 
-    @action(detail=False, methods=["get", "delete"], url_path="clear")
-    def clear_cart(self, request):
+        cart_product = get_object_or_404(CartProduct, product_id=product_id, cart=cart)
+
         if request.method == "GET":
-            cart, _ = Cart.objects.get_or_create(created_by=request.user)
+            serializer = CartProductSerializer(cart_product)
+            return Response(serializer.data)
+
+        elif request.method == "DELETE":
+            cart_product.delete()
+            return Response(
+                {"detail": "Product have remove from cart."},
+                status=status.HTTP_200_OK,
+            )
+
+    # Function to clear all product from cart
+    @action(detail=False, methods=["get", "delete"])
+    def clear_cart(self, request):
+        cart = get_object_or_404(Cart, created_by=request.user)
+
+        if request.method == "GET":
             serializer = CartSerializer(cart)
             return Response(serializer.data)
-        else:
-            cart = get_object_or_404(Cart, created_by=request.user)
+
+        elif request.method == "DELETE":
+            CartProduct.objects.filter(cart=cart).delete()
+            return Response({"detail": "Cart have clean successful."})
+
+    # Function to remove cart
+    @action(detail=False, methods=["get", "delete"])
+    def remove_cart(self, request):
+        cart = get_object_or_404(Cart, created_by=request.user)
+
+        if request.method == "GET":
+            serializer = CartSerializer(cart)
+            return Response(serializer.data)
+
+        elif request.method == "DELETE":
             cart.delete()
-            return Response({"detail": "Cart have cleared."})
+            return Response({"detail": "Cart have delete successful."})
