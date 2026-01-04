@@ -10,7 +10,7 @@ class CartProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CartProduct
-        fields = ["product", "quantity", "total_price"]
+        fields = ["id", "product", "quantity", "total_price"]
         read_only_fields = ["id"]
 
 
@@ -28,6 +28,5 @@ class AddProductSerializer(serializers.Serializer):
     product_id = serializers.IntegerField()
     quantity = serializers.IntegerField(default=1, min_value=1)
 
-
-class UpdateProductSerializer(serializers.Serializer):
-    quantity = serializers.IntegerField(min_value=1)
+    def create(self, validated_data):
+        return CartProduct.objects.create(**validated_data)
