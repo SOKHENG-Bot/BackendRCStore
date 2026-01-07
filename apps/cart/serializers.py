@@ -15,18 +15,15 @@ class CartProductSerializer(serializers.ModelSerializer):
 
 
 class CartSerializer(serializers.ModelSerializer):
-    product_list = CartProductSerializer(read_only=True, many=True, source="products")
+    cart_products = CartProductSerializer(read_only=True, many=True)
     created_by = serializers.StringRelatedField(read_only=True)
 
     class Meta:
         model = Cart
-        fields = ["id", "total_price", "created_by", "product_list"]
+        fields = ["id", "total_price", "created_by", "cart_products"]
         read_only_fields = ["id", "created_by"]
 
 
 class AddProductSerializer(serializers.Serializer):
     product_id = serializers.IntegerField()
     quantity = serializers.IntegerField(default=1, min_value=1)
-
-    def create(self, validated_data):
-        return CartProduct.objects.create(**validated_data)
